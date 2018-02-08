@@ -1,6 +1,7 @@
 # editable
 A bare R wrapper to the DataTables library including an open cell editor.
 
+```R
 library(shiny)
 library(editable)
 
@@ -27,3 +28,4 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+```
