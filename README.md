@@ -1,5 +1,5 @@
 # editable
-A bare R wrapper to the DataTables library including an open source cell editor. All other arguments are passed to the DataTable library according to: https://datatables.net/reference/option/
+A R Shiny wrapper to the DataTables library including an open source cell editor. All other arguments are passed to the DataTable library according to: https://datatables.net/reference/option/
 
 Install by executing `devtools::install_github("LukasK13/editable")` in the R console.
 
