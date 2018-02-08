@@ -1,9 +1,5 @@
-is.empty <- function(string) {
-  return(string == "")
-}
-
 switchNull <- function(argument, alternative) {
-  if (is.null(argument) || is.empty(argument)) {
+  if (is.null(argument) || argument == "") {
     return(alternative)
   } else {
     return(argument)
