@@ -1,7 +1,7 @@
 # editable
 A bare R wrapper to the DataTables library including an open cell editor. All other arguments are passed to the DataTable library according to: https://datatables.net/reference/option/
 
-Install by executing `devtools::install_github("hadley/devtools") in the R console.
+Install by executing `devtools::install_github("hadley/devtools")` in the R console.
 
 Example usage:
 
