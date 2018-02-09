@@ -12,7 +12,7 @@ buildTableInputs <- function(type, attribs) {
   for (column in names(type)) { # Schleife ueber alle bearbeitbaren Spalten
     colIndex = which(column == names(type)) # Index der Spalte in der Liste aller bearbeitbarer Spalten berechnen
     nextCol = if (colIndex < length(type)) names(type)[colIndex + 1] else names(type)[1] # Index der naechsten Spalte berechnen
-    
+
     if (type[[column]] == "text") { # Input ist ein Textfeld
       callback = paste0(callback, "buildColumnTextInput(table, id, ", column, ", ", nextCol, ", '",
                         switchNull(attribs[[column]]$placeholder, ""), "');") # Callback erzeugen
@@ -26,21 +26,24 @@ buildTableInputs <- function(type, attribs) {
 
 #' Create an editable HTML table widget output using the DataTables library
 #'
-#' This function creates an HTML widget output to display a data frame 
+#' This function creates an HTML widget output to display a data frame
 #' using the JavaScript library DataTables.
 #'
 #' @param id output variable to read the table from.
 #' @param width the width of the table container.
 #' @param height the height of the table container.
-#' 
+#'
 #' @seealso editable
 #' @export
 editableOutput <- function(outputId, width = "100%", height = "auto") {
+  shiny::addResourcePath("DataTables", system.file("DataTables", package = "editable"))
+  shiny::addResourcePath("editable", system.file("editable", package = "editable"))
+
   tagList(
     singleton(tags$head(
       tags$script(src="DataTables/datatables.min.js"),
       tags$link(rel="stylesheet", type="text/css", href="DataTables/datatables.min.css"),
-      tags$script(src="editable.js")
+      tags$script(src="editable/editable.js")
     )),
     tags$div(class = "editableOutput", tags$table(id = outputId, class = "display", width = width, height = height))
   )
@@ -64,9 +67,9 @@ editableOutput <- function(outputId, width = "100%", height = "auto") {
 #' named options, which defines the available options of the select input.
 #' @param rownames Show rownames.
 #' @param checkboxSelect Select rows using checkboxes.
-#' @param callback String containing Javascript code to be called during init. 
+#' @param callback String containing Javascript code to be called during init.
 #' @param ... Other arguments passed to the DataTable() constructor in Javascript.
-#' 
+#'
 #' @seealso editableOutput
 #' @export
 editable <- function(data, editType = NULL, editAttribs = NULL, rownames = F, checkboxSelect = F, callback = "", ...) {
@@ -97,7 +100,7 @@ editable <- function(data, editType = NULL, editAttribs = NULL, rownames = F, ch
     names(editAttribs) = colNums # Namen der Spaltenattribute in Spaltenindex aendern
     callback = paste0(callback, buildTableInputs(editType, editAttribs)) # Callback formatieren
   }
-  
+
   return(list(data = data, options = options, callback = callback))
 }
 
@@ -114,7 +117,7 @@ editable <- function(data, editType = NULL, editAttribs = NULL, rownames = F, ch
 #' This is useful if you want to save an expression in a variable.
 #' @param ... ignored when expr returns a table widget, and passed as
 #' additional arguments to editable() when expr returns a data frame
-#' 
+#'
 #' @seealso editable
 #' @export
 renderEditable <- function(expr, env = parent.frame(), quoted = F, ...) {
@@ -123,7 +126,7 @@ renderEditable <- function(expr, env = parent.frame(), quoted = F, ...) {
   } else {
     json = exprToFunction(expr, env, quoted)()
   }
-  
+
   function() {
     jsonlite::toJSON(json, auto_unbox = T)
   }
