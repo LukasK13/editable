@@ -1,52 +1,114 @@
-switchNull <- function(argument, alternative) {
-  if (is.null(argument) || argument == "") {
-    return(alternative)
-  } else {
-    return(argument)
+# install()
+# editable::editable(iris[1:5,], editable = T, editType = list("0" = "text", "4" = "select"), editAttribs = list("0" = list(placeholder = "Sepal.Length"), "4" = list(options = c("setosa", "petosa", "virginica"))))
+
+prepareDataFrame <- function(data, rownames, checkboxSelect) {
+  if (checkboxSelect) {
+    data = cbind(rep("", nrow(data)), data)
+    colnames(data)[1] = "  "
   }
+  if (rownames) {
+    data = cbind(rownames(data), data)
+    colnames(data)[1] = " "
+  }
+  return(data)
 }
 
-# Input Listener in Tabelle intialisieren
-buildTableInputs <- function(type, attribs) {
-  callback = "" # Variable callback initialisieren
-  for (column in names(type)) { # Schleife ueber alle bearbeitbaren Spalten
-    colIndex = which(column == names(type)) # Index der Spalte in der Liste aller bearbeitbarer Spalten berechnen
-    nextCol = if (colIndex < length(type)) names(type)[colIndex + 1] else names(type)[1] # Index der naechsten Spalte berechnen
-
-    if (type[[column]] == "text") { # Input ist ein Textfeld
-      callback = paste0(callback, "buildColumnTextInput(table, id, ", column, ", ", nextCol, ", '",
-                        switchNull(attribs[[column]]$placeholder, ""), "');") # Callback erzeugen
-    } else if (type[[column]] == "select") { # Input ist ein Select Input
-      callback = paste0(callback, "buildColumnSelectInput(table, id, ", column, ", ", nextCol, ", ",
-                        jsonlite::toJSON(attribs[[column]]$options), ");") # Callback erzeugen
-    }
-  }
-  return(callback) # Callback zurueckgeben
-}
-
-#' Create an editable HTML table widget output using the DataTables library
+#' Convert data returned from an editable table to a data frame
 #'
-#' This function creates an HTML widget output to display a data frame
-#' using the JavaScript library DataTables.
+#' This function converts data returned from an editable table
+#' to a dataframe object. Therefore, the column and row names will
+#' be used.
 #'
-#' @param id output variable to read the table from.
-#' @param width the width of the table container.
-#' @param height the height of the table container.
+#' @param Data data returned from getData()
+#' @return data frame
 #'
-#' @seealso editable
+#' @seealso editableGetData
 #' @export
-editableOutput <- function(outputId, width = "100%", height = "auto") {
-  shiny::addResourcePath("DataTables", system.file("DataTables", package = "editable"))
-  shiny::addResourcePath("editable", system.file("editable", package = "editable"))
+EditableToDataFrame <- function(Data) {
+  df = as.data.frame(Reduce(rbind, Data$data[1:Data$nrow]))
+  rownames(df) = NULL
+  cols <<- gsub(": .{+}$", "", Data$colnames)
+  colnames(df) = cols
+  if (" " %in% cols) {
+    rownames(df) = df[," "]
+    df = df[,-which(" " %in% cols)]
+  }
+  if ("  " %in% cols) {
+    df = df[,-which("  " %in% cols)]
+  }
+  return(df)
+}
 
-  tagList(
-    singleton(tags$head(
-      tags$script(src="DataTables/datatables.min.js"),
-      tags$link(rel="stylesheet", type="text/css", href="DataTables/datatables.min.css"),
-      tags$script(src="editable/editable.js")
-    )),
-    tags$div(class = "editableOutput", tags$table(id = outputId, class = "display", width = width, height = height))
-  )
+#' Get data from an editable table
+#'
+#' This function requests data from an editable table. The data will
+#' be available on an input named with the specified id and "_data" appended.
+#' The returned JSON-Data can be converted to a dataframe using the
+#' function EditableToDataFrame().
+#'
+#' @param id Id of the editable table.
+#'
+#' @seealso EditableToDataFrame
+#' @export
+editableGetData <- function(id) {
+  message = list(id = id)
+  shiny::getDefaultReactiveDomain()$sendCustomMessage("editable_getData", message)
+}
+
+#' Update data of an editable table
+#'
+#' This function updates the displayed data of an editable table.
+#' Therefore the current search and page selection wont't be changed.
+#'
+#' @param id Id of the editable table.
+#' @param data New data to display as dataframe
+#' @param rownames Show rownames.
+#' @param checkboxSelect Select rows using checkboxes.
+#' @param redraw Redraw the table and reset search, ordering and
+#' page selection. The default is FALSE.
+#'
+#' @seealso editableGetData
+#' @export
+editableSetData <- function(proxy, data, rownames = F, checkboxSelect = F, redraw = F) {
+  data = prepareDataFrame(data, rownames = rownames, checkboxSelect = checkboxSelect)
+  invokeRemote(proxy, 'setData', list(data, rownames, checkboxSelect, redraw))
+}
+# editableSetData <- function(id, data, rownames = F, checkboxSelect = F, redraw = F) {
+#   data = prepareDataFrame(data, rownames = rownames, checkboxSelect = checkboxSelect)
+#   message = list(id = id, data = jsonlite::toJSON(data, auto_unbox = T), redraw = redraw)
+#   shiny::getDefaultReactiveDomain()$sendCustomMessage("editable_setData", message)
+# }
+
+#' Add a row to an editable table
+#'
+#' This function appends a row to an editable table.
+#'
+#' @param id Id of the editable table.
+#' @param rowData Row data to display as dataframe
+#' @param rownames Show rownames.
+#' @param checkboxSelect Select rows using checkboxes.
+#' @param redraw Redraw the table and reset search, ordering and
+#'
+#' @seealso editableRemoveRow
+#' @export
+editableAppendRow <- function(id, rowData, rownames = F, checkboxSelect = F, redraw = F) {
+  rowData = prepareDataFrame(rowData, rownames = rownames, checkboxSelect = checkboxSelect)
+  message = list(id = id, rowData = jsonlite::toJSON(as.data.frame(rowData), auto_unbox = T))
+  shiny::getDefaultReactiveDomain()$sendCustomMessage("editable_appendRow", message)
+}
+
+#' Remove a row of an editable table
+#'
+#' This function removes a specified row of an editable table.
+#'
+#' @param id Id of the editable table.
+#' @param rowNum Index(es) of the row(s) to be removed.
+#'
+#' @seealso editableAppendRow
+#' @export
+editableRemoveRow <- function(id, rowNum) {
+  message = list(id = id, rowNum = rowNum)
+  shiny::getDefaultReactiveDomain()$sendCustomMessage("editable_removeRow", message)
 }
 
 #' Create an HTML table widget using the DataTables library
@@ -56,23 +118,18 @@ editableOutput <- function(outputId, width = "100%", height = "auto") {
 #' may be editable by text inputs and select inputs.
 #'
 #' @param data a data frame.
-#' @param editType A list containing the types of the column editors. The list
-#' must be named by the corresponding column name. Available options are 'text'
-#' for a text input element and 'select' for a select input element.
-#' @param editAttribs A list containing the options of the column editor elements.
-#' The list must be named by the corresponding column name.
-#' In case of a text input, the option itself must be a list containing the entry
-#' placeholder, which defines the placeholder of the textinput.
-#' In case of a select input, the option itself must be a list containing the vector
-#' named options, which defines the available options of the select input.
 #' @param rownames Show rownames.
 #' @param checkboxSelect Select rows using checkboxes.
-#' @param callback String containing Javascript code to be called during init.
+#' @param width,height Must be a valid CSS unit (like \code{'100\%'},
+#'   \code{'400px'}, \code{'auto'}) or a number, which will be coerced to a
+#'   string and have \code{'px'} appended.
 #' @param ... Other arguments passed to the DataTable() constructor in Javascript.
 #'
 #' @seealso editableOutput
+#' @import htmlwidgets
+#'
 #' @export
-editable <- function(data, editType = NULL, editAttribs = NULL, rownames = F, checkboxSelect = F, callback = "", ...) {
+editable <- function(data, rownames = F, checkboxSelect = F, width = NULL, height = NULL, ...) {
   options = list(...)
   if (checkboxSelect) {
     if (rownames) {
@@ -92,42 +149,95 @@ editable <- function(data, editType = NULL, editAttribs = NULL, rownames = F, ch
     colnames(data)[1] = " "
     options$columnDefs = c(list(list(orderable = F, targets = 0)), options$columnDefs)
   }
-  if (!is.null(editType) && !is.null(editAttribs)) {
-    colNums = as.character(unname(unlist(lapply(names(editType), function(name) { # Schleife ueber alle bearbeitbaren Spalten
-      return(which(names(data) == name) - 1) # Index der bearbeitbaren Spalten zurueckgeben
-    }))))
-    names(editType) = colNums # Namen der bearbeitbaren Spalten in Spaltenindex aendern
-    names(editAttribs) = colNums # Namen der Spaltenattribute in Spaltenindex aendern
-    callback = paste0(callback, buildTableInputs(editType, editAttribs)) # Callback formatieren
-  }
+  
+  # forward options using x
+  x = list(data = data, options = options)
+  attr(x, 'TOJSON_ARGS') <- list(dataframe = "rows")
 
-  return(list(data = data, options = options, callback = callback))
+  # create widget
+  htmlwidgets::createWidget(
+    name = 'editable',
+    x,
+    width = width,
+    height = height,
+    package = 'editable',
+    elementId = NULL
+  )
 }
 
-#' Render an HTML table widget using the DataTables library
+#' Shiny bindings for editable
 #'
-#' This function renders an HTML widget to display a data frame
-#' using the JavaScript library DataTables. The resulting table
-#' may be editable by text inputs and select inputs.
+#' Output and render functions for using editable within Shiny
+#' applications and interactive Rmd documents.
 #'
-#' @param expr an expression to create a table widget (normally via editable()),
-#' or a data frame to be passed to editable() to create a table widget.
-#' @param env The environment in which to evaluate expr.
-#' @param quoted Is expr a quoted expression (with quote())?
-#' This is useful if you want to save an expression in a variable.
-#' @param ... ignored when expr returns a table widget, and passed as
-#' additional arguments to editable() when expr returns a data frame
+#' @param outputId output variable to read from
+#' @param width,height Must be a valid CSS unit (like \code{'100\%'},
+#'   \code{'400px'}, \code{'auto'}) or a number, which will be coerced to a
+#'   string and have \code{'px'} appended.
+#' @param expr An expression that generates a editable
+#' @param env The environment in which to evaluate \code{expr}.
+#' @param quoted Is \code{expr} a quoted expression (with \code{quote()})? This
+#'   is useful if you want to save an expression in a variable.
 #'
-#' @seealso editable
+#' @name editable-shiny
+#'
 #' @export
-renderEditable <- function(expr, env = parent.frame(), quoted = F, ...) {
-  if (class(expr) == "data.frame") {
-    json = do.call(editable, c(list(data = expr), list(...)))
-  } else {
-    json = exprToFunction(expr, env, quoted)()
-  }
+editableOutput <- function(outputId, width = '100%', height = 'auto') {
+  htmlwidgets::shinyWidgetOutput(outputId, 'editable', width, height, package = 'editable')
+}
 
-  function() {
-    jsonlite::toJSON(json, auto_unbox = T)
+#' @rdname editable-shiny
+#' @export
+renderEditable <- function(expr, env = parent.frame(), quoted = FALSE) {
+  if (!quoted) { expr <- substitute(expr) } # force quoted
+  htmlwidgets::shinyRenderWidget(expr, editableOutput, env, quoted = TRUE)
+}
+
+#' Manipulate an existing DataTables instance in a Shiny app
+#'
+#' The function \code{datatableProxy()} creates a proxy object that can be used
+#' to manipulate an existing DataTables instance in a Shiny app, e.g. select
+#' rows/columns, or add rows.
+#' @param outputId the id of the table to be manipulated (the same id as the one
+#'   you used in \code{\link{dataTableOutput}()})
+#' @param session the Shiny session object (from the server function of the
+#'   Shiny app)
+#' @param deferUntilFlush whether an action should be carried out right away, or
+#'   should be held until after the next time all of the outputs are updated
+#' @note \code{addRow()} only works for client-side tables. If you want to use
+#'   it in a Shiny app, make sure to use \code{renderDataTable(..., server =
+#'   FALSE)}. Also note that the column filters (if used) of the table will not
+#'   be automatically updated when a new row is added, e.g., the range of the
+#'   slider of a column will stay the same even if you have added a value
+#'   outside the range of the original data column.
+#' @references \url{https://rstudio.github.io/DT/shiny.html}
+#' @rdname proxy
+#' @export
+editableProxy = function(
+  outputId, session = shiny::getDefaultReactiveDomain(), deferUntilFlush = TRUE
+) {
+  if (is.null(session))
+    stop('editableProxy() must be called from the server function of a Shiny app')
+  
+  structure(list(
+    id = session$ns(outputId), rawId = outputId, session = session,
+    deferUntilFlush = deferUntilFlush
+  ), class = 'editableProxy')
+}
+
+invokeRemote = function(proxy, method, args = list()) {
+  if (!inherits(proxy, 'editableProxy'))
+    stop('Invalid proxy argument; table proxy object was expected')
+  
+  msg = list(id = proxy$id, call = list(method = method, args = args))
+  
+  sess = proxy$session
+  if (proxy$deferUntilFlush) {
+    sess$onFlushed(function() {
+      sess$sendCustomMessage('editable-calls', msg)
+    }, once = TRUE)
+  } else {
+    sess$sendCustomMessage('editable-calls', msg)
   }
+  proxy
 }

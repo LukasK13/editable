@@ -1,0 +1,82 @@
+dependencies:
+  - name: jquery
+    version: 3.3.1
+    src: htmlwidgets/lib/jQuery
+    script: jquery.min.js
+  - name: datatables
+    version: 1.10.16
+    src: htmlwidgets/lib/DataTables
+    script: datatables.min.js
+    stylesheet: datatables.min.css
+  - name: autoFill
+    version: 2.2.2
+    src: htmlwidgets/lib/DataTables/AutoFill
+    script: js/autoFill.dataTables.min.js
+    stylesheet: css/autoFill.dataTables.min.css
+  - name: buttons
+    version: 1.5.1
+    src: htmlwidgets/lib/DataTables/Buttons
+    script: js/buttons.dataTables.min.js
+    stylesheet: css/buttons.dataTables.min.css
+  - name: colReorder
+    version: 1.4.1
+    src: htmlwidgets/lib/DataTables/ColReorder
+    script: js/colreorder.dataTables.min.js
+    stylesheet: css/colReorder.dataTables.min.css
+  - name: datatables
+    version: 1.10.16
+    src: htmlwidgets/lib/DataTables/DataTables
+    script: js/jquery.dataTables.min.js
+    stylesheet: css/jquery.dataTables.min.css
+  - name: fixedColumns
+    version: 3.2.4
+    src: htmlwidgets/lib/DataTables/FixedColumns
+    script: js/fixedColumns.dataTables.min.js
+    stylesheet: css/fixedColumns.dataTables.min.css
+  - name: fixedHeader
+    version: 3.1.3
+    src: htmlwidgets/lib/DataTables/FixedHeader
+    script: js/fixedHeader.dataTables.min.js
+    stylesheet: css/fixedHeader.dataTables.min.css
+  - name: jsZip
+    version: 2.5.0
+    src: htmlwidgets/lib/DataTables/JSZip
+    script: jszip.min.js
+  - name: keyTable
+    version: 2.3.2
+    src: htmlwidgets/lib/DataTables/KeyTable
+    script: js/keyTable.dataTables.min.js
+    stylesheet: css/keyTable.dataTables.min.css
+  - name: pdfmake
+    version: 0.1.32
+    src: htmlwidgets/lib/DataTables/pdfmake
+    script: pdfmake.min.js
+  - name: responsive
+    version: 2.2.1
+    src: htmlwidgets/lib/DataTables/Responsive
+    script: js/responsive.dataTables.min.js
+    stylesheet: css/responsive.dataTables.min.css
+  - name: rowGroup
+    version: 1.0.2
+    src: htmlwidgets/lib/DataTables/RowGroup
+    script: js/rowGroup.dataTables.min.js
+    stylesheet: css/rowGroup.dataTables.min.css
+  - name: rowReorder
+    version: 1.2.3
+    src: htmlwidgets/lib/DataTables/RowReorder
+    script: js/rowReorder.dataTables.min.js
+    stylesheet: css/rowReorder.dataTables.min.css
+  - name: scroller
+    version: 1.4.4
+    src: htmlwidgets/lib/DataTables/Scroller
+    script: js/scroller.dataTables.min.js
+    stylesheet: css/scroller.dataTables.min.css
+  - name: select
+    version: 1.2.5
+    src: htmlwidgets/lib/DataTables/Select
+    script: js/select.dataTables.min.js
+    stylesheet: css/select.dataTables.min.css
+  - name: editor
+    version: 1.0.0
+    src: htmlwidgets/lib
+    script: editor.js
